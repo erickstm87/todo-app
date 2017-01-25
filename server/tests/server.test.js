@@ -7,7 +7,9 @@ const {Todo} = require('./../models/todo.js');
 
 const todos = [{
   _id : new ObjectID(),
-  text: 'first set of todos'
+  text: 'first set of todos',
+  completed: false,
+  completedAt: 123
 },{
   _id: new ObjectID(),
   text: 'second set of todos'
@@ -121,7 +123,6 @@ describe('DELETE /todos/:id', () => {
         }).catch((e) => done(e));
       });
 
-
   });
 
   it('should return a 404 if the todo is not found', (done) => {
@@ -138,5 +139,67 @@ describe('DELETE /todos/:id', () => {
       .expect(404)
       .end(done)
   });
+
+describe('PATCH functionality', () => {
+  it('should update the object successfully', (done) => {
+    var hexId = todos[0]._id.toHexString();
+    var text = 'some new text';
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({
+        completed: true,
+        text
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo._id).toBe(hexId);
+        expect(res.body.todo.completed).toBe(true);
+        expect(res.body.todo.text).toBe('some new text');
+        expect(res.body.todo.completedAt).toBeA('number');
+      })
+      .end((err, res) => {
+        if(err){
+          return done(err);
+        }
+        Todo.find({_id: hexId}).then((todos) => {
+          expect(todos[0].completed).toBe(true);
+          done();
+        }).catch((e) => done(e));
+      });
+   });
+  it('should update completed to true when object complete is not set', (done) => {
+    var hexId = todos[1]._id.toHexString();
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({
+        completed: true,
+        text: 'something else'
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo._id).toBe(hexId);
+        expect(res.body.todo.text).toBe('something else')
+        expect(res.body.todo.completed).toBe(true);
+        //expect(res.body.todo.completedAt).toNotExist();
+      })
+      .end((err, res) => {
+        if(err){
+          return done(err);
+        }
+
+        Todo.find({_id: hexId}).then((todos) => {
+          expect(todos[0].completed).toBe(true);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('should return a 404 if the object id is invalid', (done) => {
+    request(app)
+      .patch('/todos/utternonsense')
+      .expect(404)
+      .end(done)
+  });
+});
 
 });
