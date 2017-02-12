@@ -167,7 +167,7 @@ describe('DELETE /todos/:id', () => {
         .end(done)
     });
 
-describe.only('PATCH functionality', () => {
+describe('PATCH functionality', () => {
   it('should update the object successfully', (done) => {
     var hexId = todos[0]._id.toHexString();
     var text = 'some new text';
